@@ -33,7 +33,7 @@ message PlayerState {
     int32 f38 = 38;
 }
 
-message ClientToServer {
+message OutgoingPacket {
     int32 connected = 1;
     int32 athlete_id = 2;
     int64 world_time = 3;
@@ -157,7 +157,7 @@ message EventPositions {
     int32 num_athletes = 116;
 }
 
-message ServerToClient {
+message IncomingPacket {
     int32 tag1 = 1;
     int32 athlete_id = 2;
     int64 world_time = 3;
