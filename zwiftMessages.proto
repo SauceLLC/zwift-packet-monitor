@@ -10,73 +10,88 @@ message PlayerState {
     int32 speed = 6;
     int32 roadPosition = 8;
     int32 cadenceUHz = 9;
+    int32 draft = 10; // seems to be in percentage.
     int32 heartrate = 11;
     int32 power = 12;
-    int64 heading = 13;
+    int32 heading = 13;
     int32 lean = 14;
     int32 climbing = 15;
     int32 time = 16;
-    int32 f19 = 19;
-    int32 f20 = 20;
+    int32 eventIdMaybeXXX = 19;
+    int32 roadIdMaybeXXX = 20;
     int32 progress = 21;
-    int64 customisationId = 22;
-    int32 justWatching = 23;
+    int64 joinTime = 22;
+    bool justWatching = 23;
     int32 calories = 24;
     float x = 25;
-    float altitude = 26;
     float y = 27;
+    float altitude = 26;
     int32 watchingAthleteId = 28;
     int32 groupId = 29;
-    int64 sport = 31;
-    float f34 = 34;  // actual distance moved included lateral movement
+    int32 sport = 31;
+    float actualDistance = 34;
     int32 f35 = 35;
+    int64 f36 = 36; // varint
+    int64 f37 = 37; // varint
     int32 f38 = 38;
+    int64 f41 = 41; // varint
 }
 
 message OutgoingPacket {
     int32 connected = 1;
-    int32 athlete_id = 2;
-    int64 world_time = 3;
+    int32 athleteId = 2;
+    int64 worldTime = 3;
     int32 seqno = 4;
     PlayerState state = 7;
-    int64 tag8 = 8;
-    int64 tag9 = 9;
-    int64 last_update = 10;
-    int64 tag11 = 11;
-    int64 last_player_update = 12;
+    int64 f8 = 8;
+    int64 f9 = 9;
+    int64 lastUpdate = 10;
+    int64 f11 = 11;
+    int64 lastPlayerUpdate = 12;
 }
 
 message PlayerUpdate {
-    int64 tag1 = 1;
-    int32 tag2 = 2;
+    int64 f1 = 1;
+    int32 f2 = 2;
     enum PayloadType {
         UNSET = 0;
         Payload2 = 2;
         TimeSync = 3;
         RideOn = 4;
         ChatMessage = 5;
-        RouteTBD = 6;
+        Event = 6;
+        EventJoin = 7;
+        EventLeave = 8;
         PlayerEnteredWorld = 105;
     }
     PayloadType payloadType = 3;
     bytes payload = 4;
-    int64 tag5 = 5;
-    int64 tag6 = 6;
-    int64 tag7 = 7;
-    int64 tag8 = 8;
-    int64 tag9 = 9;
-    int64 tag11 = 11;
-    int64 tag12 = 12;
-    uint64 tag14_ts_from_unknown_XXX = 14;
-    int64 tag15 = 15;
+    int64 f5 = 5;
+    int64 f6 = 6;
+    int64 f7 = 7;
+    int64 f8 = 8;
+    int64 f9 = 9;
+    int32 athleteId = 10;
+    int64 f11 = 11;
+    int64 f12 = 12;
+    uint64 ts = 14;
+    int64 f15 = 15;
+}
+
+message EventJoin {
+    int32 eventId = 1;
+}
+
+message EventLeave {
+    int32 eventId = 1;
 }
 
 message PlayerEnteredWorld {
     int64 f1 = 1;
-    int32 athlete_id = 2;
+    int32 athleteId = 2;
     int32 f3 = 3;
     int64 f4 = 4; // int32?
-    //int64 f5 = 5; 
+    //int64 f5 = 5;
     sint64 f5 = 5;  // TESTING : seen huge negative numbers ("-9223372031499258613") with int64 Hmm , try this? XXX
     int64 f6 = 6; // int32?
     string firstName = 7;
@@ -89,13 +104,13 @@ message PlayerEnteredWorld {
     int32 f14 = 14;
     int32 f15 = 15;
     int32 f16 = 16;
-    string date_of_unknown_XXX = 17;
+    string date = 17;
     int32 f19 = 19;
 }
 
 message ChatMessage {
-    int32 athlete_id = 1;
-    int32 to_athlete_id = 2; // 0 if public message
+    int32 from = 1;
+    int32 to = 2; // 0 if public message
     int32 f3 = 3; // always value 1 ?
     string firstName = 4;
     string lastName = 5;
@@ -106,8 +121,8 @@ message ChatMessage {
 }
 
 message RideOn {
-    int32 athlete_id = 1;
-    int32 to_athlete_id = 2;
+    int32 from = 1;
+    int32 to = 2;
     string firstName = 3;
     string lastName = 4;
     int32 countryCode = 5;
@@ -118,59 +133,97 @@ message Payload2 {
     int64 f2 = 2;
 }
 
-message TimeSync { 
+message TimeSync {
     int32 f1 = 1;
     int64 f2 = 2; // worldtime ?
     int32 f3 = 3;
+    int64 f4_NEW_XXX = 4;
 }
 
-message RouteTBD {
-    int64 f1 = 1; // varint
-    int64 f2 = 2; // varint
-    string route_or_world = 3; // ldelim
-    string some_sort_of_quote_or_desc = 4; // ldelim
-    uint64 ts_of_unknown = 5; // varint
-    fixed32 f7 = 7; // fixed32 maybe float
-    int64 f8 = 8; // varint
-    string url = 12; // ldelim
-    int64 ttl_or_expire_maybe = 13; // varint
+message Event {
+    int32 id = 1;
+    int32 f2 = 2; // varint maybe bool
+    string name = 3; // ldelim
+    string desc = 4; // ldelim
+    uint64 ts = 5; // varint
+    fixed32 distance = 7;
+    int32 f8 = 8; // varint maybe bool
+    message Attrs {
+        int32 id = 1;
+        string name = 2;
+        string desc = 3;
+        string f7 = 7;
+        int64 f8 = 8; // varint
+        int64 f9 = 9; // varint
+        int64 f10 = 10; // varint
+        int64 f11 = 11; // varint
+        int64 f12 = 12; // varint
+        int64 f13 = 13; // varint
+        int64 f14 = 14; // varint
+        int64 f15 = 15; // varint
+        int64 f16 = 16; // varint
+        int64 f17 = 17; // varint
+        int64 f18 = 18; // varint
+        int64 f22 = 22; // varint
+        fixed32 distance = 24;
+        int64 f25 = 25; // varint
+        int64 f29 = 29; // varint
+        int64 f30 = 30; // varint
+        int64 f31 = 31; // varint
+        fixed32 f32_maybe_float_XXX= 32; // maybe float
+        fixed32 f33_maybe_float_XXX = 33; // maybe float
+        int64 duration = 34; // varint
+        int64 f42 = 42; // varint
+        int64 f44 = 44; // varint
+        int64 f46 = 46; // varint
+        int64 f47 = 47; // varint
+    }
+    repeated Attrs attrs = 10;
+    string imageUrl = 12;
+    int32 duration = 13; // varint
     int64 f14 = 14; // varint
-    int64 f17 = 17; // varint
-    int64 f18 = 18; // varint
+    int32 f15 = 15; // varint
+    int32 f17 = 17; // varint
+    int32 f18 = 18; // varint
     int64 f19 = 19; // varint
-    int64 f22 = 22; // varint
-    int64 f23 = 23; // varint
-    int64 f24 = 24; // varint
-    int64 f25 = 25; // varint
-    int64 f27 = 27; // varint
-    int64 f28 = 28; // varint
-    int64 f29 = 29; // varint
+    int32 f22 = 22; // varint
+    int32 f23 = 23; // varint
+    int32 meetupOnlyView = 24; // varint
+    int32 f25 = 25; // varint
+    int32 f27 = 27; // varint
+    int32 f28 = 28; // varint
+    int32 f29 = 29; // varint
+    int32 f34 = 34; // varint
+    int32 f35 = 35; // varint
+    int64 f36 = 36; // varint
 }
 
 message EventPositions {
     int32 position = 1;
     message EventAthletePosition {
-        int32 athlete_id = 1;
-        // ?? float distance_covered = 2; 
+        int32 athleteId = 1;
+        // ?? float distanceCovered = 2;
     }
     repeated EventAthletePosition eventAthletePosition = 4;
-    int32 num_athletes = 116;
+    int32 athleteCount = 116;
 }
 
 message IncomingPacket {
-    int32 tag1 = 1;
-    int32 athlete_id = 2;
-    int64 world_time = 3;
+    int32 f1 = 1;
+    int32 athleteId = 2;
+    int64 worldTime = 3;
     int32 seqno = 4;
-    repeated PlayerState player_states = 8;
-    repeated PlayerUpdate player_updates = 9;
-    int64 tag11 = 11;
-    string local_ip = 12;
-    int64 tag15 = 15;
-    int64 tag17 = 17;
-    int32 num_msgs = 18;
-    int32 msgnum = 19;
-    EventPositions event_positions = 23;
+    repeated PlayerState playerStates = 8;
+    repeated PlayerUpdate playerUpdates = 9;
+    int64 f11 = 11;
+    string localIP = 12;
+    int64 f14_NEW_XXX = 14; // varint
+    int64 f15 = 15;
+    int64 f16 = 16;
+    int64 f17 = 17;
+    int32 messageCount = 18;
+    int32 msgCount = 19;
+    EventPositions eventPositions = 23;
     Server1 servers1 = 24;
     Server2 servers2 = 25;
 }
@@ -194,6 +247,9 @@ message ServerPool {
 message Server2 {
     repeated ServerPool pool = 1;
     int32 f2 = 2;
+    int64 f4_NEW_XXX = 4; // varint
+    fixed32 f5_NEW_XXX = 5;
+    fixed32 f6_NEW_XXX = 6;
 }
 
 message Server1 {
@@ -204,16 +260,16 @@ message Server1 {
 }
 
 message WorldAttributes {
-    int32 world_id = 1;
+    int32 worldId = 1;
     string name = 2;
-    int64 tag3 = 3;
-    int64 tag5 = 4;
-    int64 world_time = 6;
-    int64 clock_time = 7;
+    int64 f3 = 3;
+    int64 f5 = 4;
+    int64 worldTime = 6;
+    int64 clockTime = 7;
 }
 
 message WorldAttribute {
-    int64 world_time = 2;
+    int64 worldTime = 2;
 }
 
 message EventSubgroupProtobuf {

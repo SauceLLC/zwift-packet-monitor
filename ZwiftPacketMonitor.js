@@ -39,7 +39,7 @@ class ZwiftPacketMonitor extends EventEmitter {
     }
 
     _handleIncomingPacket(packet) {
-        for (const x of packet.player_updates) {
+        for (const x of packet.playerUpdates) {
             const PayloadMsg = zpb.get(x.$type.getEnum('PayloadType')[x.payloadType]);
             if (!PayloadMsg) {
                 if (![110, 106, 102, 109, 108].includes(x.payloadType)) {
@@ -66,6 +66,14 @@ class ZwiftPacketMonitor extends EventEmitter {
     }
 
     processPacket() {
+        try {
+            this._processPacket();
+        } catch(e) {
+            console.error('Packet processing error:', e);
+        }
+    }
+
+    _processPacket() {
         if (this._linkType !== 'ETHERNET') {
             return;
         }
@@ -76,41 +84,36 @@ class ZwiftPacketMonitor extends EventEmitter {
         const ip = decoders.IPV4(this._capBuf, eth.offset);
         if (ip.info.protocol === PROTOCOL.IP.UDP) {
             const udp = decoders.UDP(this._capBuf, ip.offset);
-            try {
-                if (udp.info.srcport === 3022) {
-                    const packet = IncomingPacket.decode(this._capBuf.slice(udp.offset, udp.offset + udp.info.length));
-                    /*
-                       if (this._sequence) {
-                       if (packet.seqno > this._sequence + 1) {
-                       console.warn(`Missing packets - expecting ${this._sequence + 1}, got ${packet.seqno}`)
-                       } else if (packet.seqno < this._squence) {
-                       console.warn(`Delayed packet - expecting ${this._sequence + 1}, got ${packet.seqno}`)
-                       return
-                       }
-                       }
-                       this._sequence = packet.seqno
-                    */
-                    this._handleIncomingPacket(packet);
-                } else if (udp.info.dstport === 3022) {
-                    // 2020-11-14 extra handling added to handle what seems to be extra information preceeding the protobuf
-                    let skip = 5; // uncertain if this number should be fixed or
-                    // ...if the first byte(so far only seen with value 0x06)
-                    // really is the offset where protobuf starts, so add some extra checks just in case:
-                    if (this._capBuf.slice(udp.offset + skip, udp.offset + skip + 1).equals(Buffer.from([0x08]))) {
-                        // protobuf does seem to start after skip bytes
-                    } else if (this._capBuf.slice(udp.offset, udp.offset + 1).equals(Buffer.from([0x08]))) {
-                        // old format apparently, starting directly with protobuf instead of new header
-                        skip = 0;
-                    } else {
-                        // use the first byte to determine how many bytes to skip
-                        skip = this._capBuf.slice(udp.offset, udp.offset + 1).readUIntBE(0, 1) - 1;
-                    }
-                    const packet = OutgoingPacket.decode(this._capBuf.slice(udp.offset + skip, udp.offset + udp.info.length - 4));
-                    setTimeout(() => this.emit('outgoing', packet), 0);
+            if (udp.info.srcport === 3022) {
+                const packet = IncomingPacket.decode(this._capBuf.slice(udp.offset, udp.offset + udp.info.length));
+                /*
+                   if (this._sequence) {
+                   if (packet.seqno > this._sequence + 1) {
+                   console.warn(`Missing packets - expecting ${this._sequence + 1}, got ${packet.seqno}`)
+                   } else if (packet.seqno < this._squence) {
+                   console.warn(`Delayed packet - expecting ${this._sequence + 1}, got ${packet.seqno}`)
+                   return
+                   }
+                   }
+                   this._sequence = packet.seqno
+                */
+                this._handleIncomingPacket(packet);
+            } else if (udp.info.dstport === 3022) {
+                // 2020-11-14 extra handling added to handle what seems to be extra information preceeding the protobuf
+                let skip = 5; // uncertain if this number should be fixed or
+                // ...if the first byte(so far only seen with value 0x06)
+                // really is the offset where protobuf starts, so add some extra checks just in case:
+                if (this._capBuf.slice(udp.offset + skip, udp.offset + skip + 1).equals(Buffer.from([0x08]))) {
+                    // protobuf does seem to start after skip bytes
+                } else if (this._capBuf.slice(udp.offset, udp.offset + 1).equals(Buffer.from([0x08]))) {
+                    // old format apparently, starting directly with protobuf instead of new header
+                    skip = 0;
+                } else {
+                    // use the first byte to determine how many bytes to skip
+                    skip = this._capBuf.slice(udp.offset, udp.offset + 1).readUIntBE(0, 1) - 1;
                 }
-            } catch (e) {
-                console.error('Ingoring ethernet parse error:', e); // XXX
-                debugger;
+                const packet = OutgoingPacket.decode(this._capBuf.slice(udp.offset + skip, udp.offset + udp.info.length - 4));
+                setTimeout(() => this.emit('outgoing', packet), 0);
             }
         } else if (ip.info.protocol === PROTOCOL.IP.TCP) {
             const tcp = decoders.TCP(this._capBuf, ip.offset);
