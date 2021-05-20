@@ -213,6 +213,7 @@ message IncomingPacket {
     int32 athleteId = 2;
     int64 worldTime = 3;
     int32 seqno = 4;
+    int32 f5 = 5; // varint
     repeated PlayerState playerStates = 8;
     repeated PlayerUpdate playerUpdates = 9;
     int64 f11 = 11;
