@@ -48,6 +48,16 @@ async function sleep(ms) {
 }
 
 
+let minHeading = Infinity;
+let maxHeading = -Infinity;
+function distance(a, b) {
+    minHeading = Math.min(minHeading, a.heading, b.heading);
+    maxHeading = Math.max(maxHeading, a.heading, b.heading);
+    //console.warn(a.heading, b.heading, minHeading, maxHeading);
+    return Math.sqrt((b.x - a.x) ** 2 + (b.y - a.y) ** 2);
+}
+
+
 async function main() {
     const athletes = await getAthleteCache();
     const iface = await getPrimaryInterface();
@@ -67,14 +77,12 @@ async function main() {
                         added++;
                     }
                     athletes.set(x.payload.athleteId, x.payload.toJSON());
-                } else if (x.payload.$type.name === 'Event') {
-                    console.warn("Route debug (verify this):", x.payload);
                 } else if (x.payload.$type.name === 'EventJoin') {
                     console.warn("Event Join:", x.payload);
                 } else if (x.payload.$type.name === 'EventLeave') {
                     console.warn("Event Leave:", x.payload);
                 } else if (x.payload.$type.name === 'ChatMessage') {
-                    console.warn("Chat:", x.payload);
+                    console.warn("Chat:", x.payload.firstName, x.payload.lastName, ':', x.payload.message);
                 } else if (x.payload.$type.name === 'RideOn') {
                     console.warn("RideOn:", x.payload);
                 }
@@ -88,18 +96,18 @@ async function main() {
         }
         let missing = 0;
         let found = 0;
+        if (!watching) {
+            // Fallback for when we are just watching or not hooked up with power.
+            watching = packet.athleteId;
+        }
         for (x of packet.playerStates) {
             const athlete = athletes.get(x.id);
             if (!athlete) {
                 missing++;
             } else {
                 found++;
-                //console.info("Suwheet we do have this one:", x.id, athlete.firstName, athlete.lastName);
             }
             states.set(x.id, x);
-        }
-        if (missing || found) {
-            //console.warn("HIT/MISS:", found, missing);
         }
     });
     monitor.on('outgoing', packet => {
@@ -110,16 +118,36 @@ async function main() {
         states.set(packet.athleteId, packet.state);
     });
     monitor.start();
+    console.clear();
     while (true) {
+        if (!watching) {
+            await sleep(100);
+            continue;
+        }
+        const nearby = [];
+        const athlete = athletes.get(watching);
+        const state = states.get(watching);
+        console.debug("Heading range:", minHeading, maxHeading);
+        console.debug("Athletes:", athletes.size, "States:", states.size);
+        console.debug("Watching:", athlete.athleteId);
+        if (state) {
+            const statePos = state.roadTime * (state.flags1 & state.$type.getEnum('Flags1').REVERSE) ? -1 : 1;
+            for (const [id, x] of states.entries()) {
+                const dist = distance(x, state);
+                const reverse = (x.flags1 & state.$type.getEnum('Flags1').REVERSE) ? -1 : 1;
+                //if (x.roadId === state.roadId) {
+                nearby.push({dist, relPos: statePos - (x.roadTime * reverse), state: x});
+                //}
+            }
+            nearby.sort((a, b) => b.relPos - a.relPos);
+            const center = nearby.findIndex(x => x.state.id === watching);
+            for (let i = Math.max(0, center - 8); i < Math.min(nearby.length, center + 8); i++) {
+                const x = nearby[i];
+                console.debug('Leaderboard:', i - center, 'crow:', Math.round(x.dist), Math.round(x.state.heading / 50000), 'relPos:', x.relPos, 'flags...', x.state.flags1.toString(16), x.state.flags2.toString(16), 'name:', athletes.get(x.state.id)?.lastName);
+            }
+        }
         await sleep(1000);
         await setAthleteCache(athletes);
-        if (watching) {
-            const athlete = athletes.get(watching);
-            const state = states.get(watching);
-            console.debug("Athletes:", athletes.size, "States:", states.size);
-            console.debug("Watching:", athlete);
-            console.debug("State:", state.toJSON());
-        }
     }
 }
 

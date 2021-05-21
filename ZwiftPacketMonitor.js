@@ -12,6 +12,13 @@ const IncomingPacket = zpb.get('IncomingPacket');
 const OutgoingPacket = zpb.get('OutgoingPacket');
 
 
+let worldTimeOffset = 1414016074335;  // ms since zwift started production.
+function worldTimeToDate(wt) {
+    // TBD I think timesync helps us adjust the offset but I can't interpret it yet.
+    return new Date(worldTimeOffset + Number(wt));
+}
+
+
 class ZwiftPacketMonitor extends EventEmitter {
     constructor (interfaceName) {
         super();
@@ -112,7 +119,15 @@ class ZwiftPacketMonitor extends EventEmitter {
                     // use the first byte to determine how many bytes to skip
                     skip = this._capBuf.slice(udp.offset, udp.offset + 1).readUIntBE(0, 1) - 1;
                 }
-                const packet = OutgoingPacket.decode(this._capBuf.slice(udp.offset + skip, udp.offset + udp.info.length - 4));
+                const packet = OutgoingPacket.decode(this._capBuf.slice(udp.offset + skip,
+                    udp.offset + udp.info.length - 4));
+                if (packet.worldTime.toNumber()) {
+                    packet.date = worldTimeToDate(packet.worldTime);
+                    if (Math.abs(Date.now() - packet.date.getTime()) > 200) {
+                        console.warn('Clock drift from worldTime exceeded 200ms:',
+                            Date.now() - packet.date.getTime());
+                    }
+                }
                 setTimeout(() => this.emit('outgoing', packet), 0);
             }
         } else if (ip.info.protocol === PROTOCOL.IP.TCP) {

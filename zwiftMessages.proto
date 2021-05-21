@@ -13,12 +13,17 @@ message PlayerState {
     int32 draft = 10; // seems to be in percentage.
     int32 heartrate = 11;
     int32 power = 12;
-    int32 heading = 13;
+    int32 heading = 13;  // Appears to be degress / 50000.
     int32 lean = 14;
     int32 climbing = 15;
     int32 time = 16;
-    int32 eventIdMaybeXXX = 19;
-    int32 roadIdMaybeXXX = 20;
+    enum Flags1 {
+        UNSET = 0;
+        REVERSE = 0x4;
+        // TBD all the other fields.
+    }
+    Flags1 flags1 = 19; // TBD
+    uint32 flags2 = 20; // TBD
     int32 progress = 21;
     int64 joinTime = 22;
     bool justWatching = 23;
@@ -28,7 +33,7 @@ message PlayerState {
     float altitude = 26;
     int32 watchingAthleteId = 28;
     int32 groupId = 29;
-    int32 sport = 31;
+    int32 sport = 31; // 0 = biking, 1 = running
     float actualDistance = 34;
     int32 f35 = 35;
     int64 f36 = 36; // varint
@@ -134,10 +139,10 @@ message Payload2 {
 }
 
 message TimeSync {
-    int32 f1 = 1;
-    int64 f2 = 2; // worldtime ?
+    sint32 f1 = 1;
+    int64 worldTime = 2;
     int32 f3 = 3;
-    int64 f4_NEW_XXX = 4;
+    int32 f4 = 4; // maybe bool
 }
 
 message Event {
@@ -200,11 +205,21 @@ message Event {
 
 message EventPositions {
     int32 position = 1;
+    message Unknown { // Comes in 3s , so maybe coordinates used for bounding box
+        int32 f1 = 1; // varint
+        fixed32 f2 = 2;
+        int32 f3 = 3; // varint
+    }
+    repeated Unknown unknown = 2;  // possibly a corner of a bounding box?
+    repeated Unknown unknown2 = 3;  // possibly a corner of a bounding box?
     message EventAthletePosition {
         int32 athleteId = 1;
         // ?? float distanceCovered = 2;
     }
     repeated EventAthletePosition eventAthletePosition = 4;
+    int32 f6 = 6; // varint
+    int64 f7 = 7; // varint
+    int32 f8 = 8; // varint
     int32 athleteCount = 116;
 }
 
