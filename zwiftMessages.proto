@@ -7,13 +7,13 @@ message PlayerState {
     int32 distance = 3;
     int32 roadTime = 4;
     int32 laps = 5;
-    int32 speed = 6;
+    int32 speed = 6; // mm / hour
     int32 roadPosition = 8;
     int32 cadenceUHz = 9;
     int32 draft = 10; // seems to be in percentage.
     int32 heartrate = 11;
     int32 power = 12;
-    int32 heading = 13;  // Appears to be degress / 50000.
+    int32 heading = 13;  // microrads from -pi -> 3pi
     int32 lean = 14;
     int32 climbing = 15;
     int32 time = 16;
@@ -39,6 +39,7 @@ message PlayerState {
     int64 f36 = 36; // varint
     int64 f37 = 37; // varint
     int32 f38 = 38;
+    int64 f39 = 39; // varint
     int64 f41 = 41; // varint
 }
 
@@ -214,9 +215,17 @@ message EventPositions {
     repeated Unknown unknown2 = 3;  // possibly a corner of a bounding box?
     message EventAthletePosition {
         int32 athleteId = 1;
-        // ?? float distanceCovered = 2;
+        float distanceCovered = 2; // TBD XXX
+        int64 f3 = 3; // varint
+        message Unknown {
+            int32 f1 = 1; // varint
+            fixed32 f2 = 2;
+            uint64 f3 = 3;
+        }
+        Unknown unknown = 5;
     }
-    repeated EventAthletePosition eventAthletePosition = 4;
+    EventAthletePosition eventAthletePosition = 4;
+    EventAthletePosition eventAthletePosition2 = 5;
     int32 f6 = 6; // varint
     int64 f7 = 7; // varint
     int32 f8 = 8; // varint

@@ -48,13 +48,22 @@ async function sleep(ms) {
 }
 
 
+function headingConv(microRads) {
+    if (microRads < Math.PI * -1000000 || microRads > Math.PI * 3000000) {
+        debugger;
+    }
+    halfCircle = 1000000 * Math.PI;
+    return (((microRads + halfCircle) / (2 * halfCircle)) * 360) % 360;
+}
+
+
 let minHeading = Infinity;
 let maxHeading = -Infinity;
 function distance(a, b) {
     minHeading = Math.min(minHeading, a.heading, b.heading);
     maxHeading = Math.max(maxHeading, a.heading, b.heading);
-    //console.warn(a.heading, b.heading, minHeading, maxHeading);
-    return Math.sqrt((b.x - a.x) ** 2 + (b.y - a.y) ** 2);
+    (headingConv(a.heading), headingConv(b.heading), headingConv(minHeading), headingConv(maxHeading));
+    return Math.sqrt((b.x - a.x) ** 2 + (b.y - a.y) ** 2) / 100;  // roughly meters
 }
 
 
@@ -127,12 +136,23 @@ async function main() {
         const nearby = [];
         const athlete = athletes.get(watching);
         const state = states.get(watching);
-        console.debug("Heading range:", minHeading, maxHeading);
-        console.debug("Athletes:", athletes.size, "States:", states.size);
-        console.debug("Watching:", athlete.athleteId);
         if (state) {
-            const statePos = state.roadTime * (state.flags1 & state.$type.getEnum('Flags1').REVERSE) ? -1 : 1;
+            console.debug("Heading range:", minHeading, maxHeading);
+            console.debug("Athletes:", athletes.size, "States:", states.size);
+            console.debug("Watching:", athlete.athleteId, headingConv(state.heading));
+            const statePos = state.roadTime * ((state.flags1 & state.$type.getEnum('Flags1').REVERSE) ? -1 : 1);
+            const now = Date.now();
             for (const [id, x] of states.entries()) {
+                if (now - x.date > 10000) {
+                    console.info("Stale entry:", x);
+                    states.delete(id);
+                    continue;
+                }
+                if (state.groupId && x.groupId === state.groupId) {
+                    console.info("Skip rider from other group", state.groupId);
+                    continue;
+                }
+                headingConv(x.heading);
                 const dist = distance(x, state);
                 const reverse = (x.flags1 & state.$type.getEnum('Flags1').REVERSE) ? -1 : 1;
                 //if (x.roadId === state.roadId) {
@@ -143,10 +163,11 @@ async function main() {
             const center = nearby.findIndex(x => x.state.id === watching);
             for (let i = Math.max(0, center - 8); i < Math.min(nearby.length, center + 8); i++) {
                 const x = nearby[i];
-                console.debug('Leaderboard:', i - center, 'crow:', Math.round(x.dist), Math.round(x.state.heading / 50000), 'relPos:', x.relPos, 'flags...', x.state.flags1.toString(16), x.state.flags2.toString(16), 'name:', athletes.get(x.state.id)?.lastName);
+                const eta = x.dist / (state.speed / 1000 / 3600);
+                console.debug('Leaderboard:', i - center, Math.round(x.dist), 'm', (x.state.speed / 1000000).toFixed(1), 'kph', 'eta:', Math.round(eta), 'relPos:', x.relPos, 'flags...', x.state.flags1.toString(16), x.state.flags2.toString(16), 'name:', athletes.get(x.state.id)?.lastName, headingConv(x.state.heading).toFixed(1));
             }
         }
-        await sleep(1000);
+        await sleep(2000);
         await setAthleteCache(athletes);
     }
 }

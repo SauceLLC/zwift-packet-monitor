@@ -49,7 +49,7 @@ class ZwiftPacketMonitor extends EventEmitter {
         for (const x of packet.playerUpdates) {
             const PayloadMsg = zpb.get(x.$type.getEnum('PayloadType')[x.payloadType]);
             if (!PayloadMsg) {
-                if (![110, 106, 102, 109, 108].includes(x.payloadType)) {
+                if (![110, 106, 102, 109, 108, 114].includes(x.payloadType)) {
                     debugger;
                     console.warn('No payload message for:', x.payloadType);
                 }
