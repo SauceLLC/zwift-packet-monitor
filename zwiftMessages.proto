@@ -5,10 +5,10 @@ message PlayerState {
     int32 id = 1;
     int64 worldTime = 2;
     int32 distance = 3;
-    int32 roadTime = 4;
+    int32 roadLocation = 4; // Location on road in percent * 10,000.
     int32 laps = 5;
     int32 speed = 6; // mm / hour
-    int32 roadPosition = 8;
+    int32 roadPosition = 8;  // Horiz, i.e. lane.
     int32 cadenceUHz = 9;
     int32 draft = 10; // seems to be in percentage.
     int32 heartrate = 11;
@@ -17,19 +17,14 @@ message PlayerState {
     int32 lean = 14;
     int32 climbing = 15;
     int32 time = 16;
-    enum Flags1 {
-        UNSET = 0;
-        REVERSE = 0x4;
-        // TBD all the other fields.
-    }
-    Flags1 flags1 = 19; // TBD
-    uint32 flags2 = 20; // TBD
+    uint32 flags1 = 19; // Packed with info parsed in user code
+    uint32 flags2 = 20; // Packed with info parsed in user code
     int32 progress = 21;
     int64 joinTime = 22;
     bool justWatching = 23;
-    int32 calories = 24;
-    float x = 25;
-    float y = 27;
+    int32 joules = 24;
+    float x = 25; // cartesian meters
+    float y = 27; // cartesian meters
     float altitude = 26;
     int32 watchingAthleteId = 28;
     int32 groupId = 29;
