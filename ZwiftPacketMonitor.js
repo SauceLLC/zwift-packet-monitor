@@ -50,8 +50,7 @@ class ZwiftPacketMonitor extends EventEmitter {
             const PayloadMsg = zpb.get(x.$type.getEnum('PayloadType')[x.payloadType]);
             if (!PayloadMsg) {
                 if (![110, 106, 102, 109, 108, 114].includes(x.payloadType)) {
-                    debugger;
-                    console.warn('No payload message for:', x.payloadType);
+                    console.warn('No payload message for:', x.payloadType, x.payload);
                 }
             } else {
                 try {
@@ -59,7 +58,6 @@ class ZwiftPacketMonitor extends EventEmitter {
                     x.payload = PayloadMsg.decode(x.payloadBuf);
                 } catch(e) {
                     console.error('Payload processing error:', e, PayloadMsg, x.payloadType, x.payloadBuf);
-                    debugger;
                     throw e;
                 }
             }
