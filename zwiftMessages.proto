@@ -201,29 +201,29 @@ message Event {
 
 message EventPositions {
     int32 position = 1;
-    message Unknown { // Comes in 3s , so maybe coordinates used for bounding box
-        int32 f1 = 1; // varint
+    message Unknown {
+        int32 f1 = 1; // varint  // maybe athlete id?
         fixed32 f2 = 2;
-        int32 f3 = 3; // varint
+        uint32 f3 = 3; // varint
     }
-    repeated Unknown unknown = 2;  // possibly a corner of a bounding box?
-    repeated Unknown unknown2 = 3;  // possibly a corner of a bounding box?
+    repeated Unknown unknown = 2;
+    repeated Unknown unknown2 = 3;
     message EventAthletePosition {
         int32 athleteId = 1;
         float distanceCovered = 2; // TBD XXX
-        int64 f3 = 3; // varint
-        message Unknown {
-            int32 f1 = 1; // varint
-            fixed32 f2 = 2;
-            uint64 f3 = 3;
+        uint32 f3 = 3; // varint looks like a bitfield maybe
+        message PositionUnknown {
+            int32 athleteId = 1;
+            fixed32 f2 = 2;  // increments, possibly timestamp offet or distance
+            uint64 f3 = 3;  // Looks like a bit field maybe
         }
-        Unknown unknown = 5;
+        PositionUnknown unknown = 5;
     }
-    EventAthletePosition eventAthletePosition = 4;
-    EventAthletePosition eventAthletePosition2 = 5;
-    int32 f6 = 6; // varint
-    int64 f7 = 7; // varint
-    int32 f8 = 8; // varint
+    EventAthletePosition eventAthletePosition = 4;  // XXX possibly leading in group?
+    EventAthletePosition eventAthletePosition2 = 5; // XXX possibly trailing in group?
+    int32 activeAthleteCount = 6;
+    int32 leaderAthleteId = 7;
+    int32 distanceToLeader = 8;  // cm
     int32 athleteCount = 116;
 }
 

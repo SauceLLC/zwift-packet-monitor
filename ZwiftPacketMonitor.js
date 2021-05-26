@@ -49,7 +49,11 @@ class ZwiftPacketMonitor extends EventEmitter {
         for (const x of packet.playerUpdates) {
             const PayloadMsg = zpb.get(x.$type.getEnum('PayloadType')[x.payloadType]);
             if (!PayloadMsg) {
-                if (![110, 106, 102, 109, 108, 114].includes(x.payloadType)) {
+                if (x.payloadType === 100 || x.payloadType === 101) {
+                    // These appear to LE floats.  Perhaps some latency reports (values of ~0.2 or ~4.2 observed)
+                    x.XXX_maybe_latency_report = x.payload.readFloatLE();
+                    console.warn("XXX Possible latency report?:", x.XXX_maybe_latency_report);
+                } else if (![110, 106, 102, 109, 108, 114].includes(x.payloadType)) {
                     console.warn('No payload message for:', x.payloadType, x.payload);
                 }
             } else {
