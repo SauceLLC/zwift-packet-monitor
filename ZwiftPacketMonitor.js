@@ -125,10 +125,6 @@ class ZwiftPacketMonitor extends EventEmitter {
                     udp.offset + udp.info.length - 4));
                 if (packet.worldTime.toNumber()) {
                     packet.date = worldTimeToDate(packet.worldTime);
-                    if (Math.abs(Date.now() - packet.date.getTime()) > 200) {
-                        console.warn('Clock drift from worldTime exceeded 200ms:',
-                            Date.now() - packet.date.getTime());
-                    }
                 }
                 setTimeout(() => this.emit('outgoing', packet), 0);
             }
