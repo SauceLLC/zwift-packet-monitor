@@ -22,7 +22,6 @@ function worldTimeToDate(wt) {
 class ZwiftPacketMonitor extends EventEmitter {
     constructor (interfaceName) {
         super();
-        this._cap = new Cap();
         this._linkType = null;
         this._sequence = 0;
         this._tcpBuffers = [];
@@ -35,6 +34,7 @@ class ZwiftPacketMonitor extends EventEmitter {
 
     start () {
         this._capBuf = new Buffer.alloc(65535);
+        this._cap = new Cap();
         this._linkType = this._cap.open(this._interfaceName, 'udp port 3022 or tcp port 3023',
                 10 * 1024 * 1024, this._capBuf);
         this._cap.setMinBytes && this._cap.setMinBytes(0);
