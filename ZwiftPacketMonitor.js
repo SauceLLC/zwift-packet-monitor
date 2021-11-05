@@ -23,7 +23,7 @@ class ZwiftPacketMonitor extends EventEmitter {
     constructor (interfaceName) {
         super();
         this._linkType = null;
-        this._sequence = 0;
+        this._inUDPSequences = new Map();
         this._tcpBuffers = [];
         if (interfaceName.match(/[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+/)) {
             this._interfaceName = Cap.findDevice(interfaceName);
@@ -82,6 +82,20 @@ class ZwiftPacketMonitor extends EventEmitter {
         }
     }
 
+    _validateIncomingUDP(packet, conn) {
+        if (this._inUDPSequences.has(conn)) {
+            const last = this._inUDPSequences.get(conn);
+            if (packet.seqno > last + 1) {
+                console.warn(`${packet.seqno - (last + 1)} packet(s) were dropped or delayed`);
+            } else if (packet.seqno < last + 1) {
+                console.warn(`Ignoring delayed packet`, packet.seqno);
+                return false;
+            }
+        }
+        this._inUDPSequences.set(conn, packet.seqno);
+        return true;
+    }
+
     _processPacket() {
         if (this._linkType !== 'ETHERNET') {
             return;
@@ -93,36 +107,23 @@ class ZwiftPacketMonitor extends EventEmitter {
         const ip = decoders.IPV4(this._capBuf, eth.offset);
         if (ip.info.protocol === PROTOCOL.IP.UDP) {
             const udp = decoders.UDP(this._capBuf, ip.offset);
+            const buf = this._capBuf.slice(udp.offset, udp.offset + udp.info.length);
             if (udp.info.srcport === 3022) {
-                const packet = IncomingPacket.decode(this._capBuf.slice(udp.offset, udp.offset + udp.info.length));
-                /*
-                   if (this._sequence) {
-                   if (packet.seqno > this._sequence + 1) {
-                   console.warn(`Missing packets - expecting ${this._sequence + 1}, got ${packet.seqno}`)
-                   } else if (packet.seqno < this._squence) {
-                   console.warn(`Delayed packet - expecting ${this._sequence + 1}, got ${packet.seqno}`)
-                   return
-                   }
-                   }
-                   this._sequence = packet.seqno
-                */
+                const packet = IncomingPacket.decode(buf);
+                if (!this._validateIncomingUDP(packet, `${ip.info.srcaddr}:${udp.info.dstport}`)) {
+                    console.warn(`Ignoring invalid packet`, packet.seqno);
+                    return
+                }
                 this._handleIncomingPacket(packet);
             } else if (udp.info.dstport === 3022) {
-                // 2020-11-14 extra handling added to handle what seems to be extra information preceeding the protobuf
-                let skip = 5; // uncertain if this number should be fixed or
-                // ...if the first byte(so far only seen with value 0x06)
-                // really is the offset where protobuf starts, so add some extra checks just in case:
-                if (this._capBuf.slice(udp.offset + skip, udp.offset + skip + 1).equals(Buffer.from([0x08]))) {
-                    // protobuf does seem to start after skip bytes
-                } else if (this._capBuf.slice(udp.offset, udp.offset + 1).equals(Buffer.from([0x08]))) {
-                    // old format apparently, starting directly with protobuf instead of new header
-                    skip = 0;
-                } else {
-                    // use the first byte to determine how many bytes to skip
-                    skip = this._capBuf.slice(udp.offset, udp.offset + 1).readUIntBE(0, 1) - 1;
+                // Late 2021 format is single byte of magic or flags followed by regular protobuf.
+                if (buf[0] !== 0xdf) {
+                    debugger;
+                    throw new TypeError('Unhandled outgoing packet format');
                 }
-                const packet = OutgoingPacket.decode(this._capBuf.slice(udp.offset + skip,
-                    udp.offset + udp.info.length - 4));
+                // Last four bytes of outgoing data are also non-protobuf, but no idea what..
+                console.warn("What are these 4 bytes for?", buf.slice(-4).join());
+                const packet = OutgoingPacket.decode(buf.slice(1, -4));
                 if (packet.worldTime.toNumber()) {
                     packet.date = worldTimeToDate(packet.worldTime);
                 }

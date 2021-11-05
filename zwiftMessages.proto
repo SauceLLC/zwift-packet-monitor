@@ -30,7 +30,7 @@ message PlayerState {
     int32 groupId = 29;
     int32 sport = 31; // 0 = biking, 1 = running
     float actualDistance = 34;
-    int32 f35 = 35;
+    int32 f35 = 35; // varint
     int64 f36 = 36; // varint
     int64 f37 = 37; // varint
     int32 f38 = 38;
@@ -240,7 +240,7 @@ message IncomingPacket {
     int64 f14_NEW_XXX = 14; // varint
     int64 f15 = 15;
     int64 f16 = 16;
-    int64 f17 = 17;
+    int64 f17 = 17; // varint, possibly 32bits or less
     int32 messageCount = 18;
     int32 msgCount = 19;
     EventPositions eventPositions = 23;
