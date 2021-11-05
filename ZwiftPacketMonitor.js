@@ -57,8 +57,8 @@ class ZwiftPacketMonitor extends EventEmitter {
                     console.warn('No payload message for:', x.payloadType, x.payload);
                 }
             } else {
+                x.payloadBuf = x.payload; // XXX makes debug easier
                 try {
-                    x.payloadBuf = x.payload; // XXX
                     x.payload = PayloadMsg.decode(x.payloadBuf);
                 } catch(e) {
                     console.error('Payload processing error:', e, PayloadMsg, x.payloadType, x.payloadBuf);
@@ -122,7 +122,6 @@ class ZwiftPacketMonitor extends EventEmitter {
                     throw new TypeError('Unhandled outgoing packet format');
                 }
                 // Last four bytes of outgoing data are also non-protobuf, but no idea what..
-                console.warn("What are these 4 bytes for?", buf.slice(-4).join());
                 const packet = OutgoingPacket.decode(buf.slice(1, -4));
                 if (packet.worldTime.toNumber()) {
                     packet.date = worldTimeToDate(packet.worldTime);
@@ -163,4 +162,4 @@ class ZwiftPacketMonitor extends EventEmitter {
 }
 
 
-module.exports = ZwiftPacketMonitor
+module.exports = ZwiftPacketMonitor;
