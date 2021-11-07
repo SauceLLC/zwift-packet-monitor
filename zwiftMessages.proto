@@ -99,14 +99,18 @@ message PlayerEnteredWorld {
     string lastName = 8;
     //int64 f9 = 9;  always seems like a value of "207270651460"
     sint64 f9 = 9;  // TESTING
-    int64 f11 = 11;
+    string joinDate = 10;
+    int32 f11 = 11;
     int32 f12 = 12;
     int32 weight = 13; // grams
     int32 f14 = 14;
     int32 f15 = 15;
     int32 f16 = 16;
     string date = 17;
+    int32 f18 = 18;
     int32 f19 = 19;
+    int32 f20 = 20;
+    int64 f21 = 21;
 }
 
 message ChatMessage {
