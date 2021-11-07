@@ -2,7 +2,7 @@ syntax="proto3";
 
 
 message PlayerState {
-    int32 id = 1;
+    int32 athleteId = 1;
     int64 worldTime = 2;
     int32 distance = 3;
     int32 roadLocation = 4; // Location on road in percent * 10,000.
@@ -76,7 +76,7 @@ message PlayerUpdate {
     int64 f11 = 11;
     int64 f12 = 12;
     uint64 ts = 14;
-    int64 f15 = 15;
+    int32 f15 = 15;
 }
 
 message EventJoin {
@@ -91,7 +91,7 @@ message PlayerEnteredWorld {
     int64 f1 = 1;
     int32 athleteId = 2;
     int32 f3 = 3;
-    int64 f4 = 4; // int32?
+    int32 f4 = 4;
     //int64 f5 = 5;
     sint64 f5 = 5;  // TESTING : seen huge negative numbers ("-9223372031499258613") with int64 Hmm , try this? XXX
     int64 f6 = 6; // int32?

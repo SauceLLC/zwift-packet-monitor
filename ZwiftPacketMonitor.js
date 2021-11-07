@@ -56,6 +56,8 @@ class ZwiftPacketMonitor extends EventEmitter {
                 } else if (![110, 106, 102, 109, 108, 114].includes(x.payloadType)) {
                     console.warn('No payload message for:', x.payloadType, x.payload);
                 }
+                console.debug('Unhandled payload type:', x.payloadType);
+                console.debug(x.payload.join());
             } else {
                 x.payloadBuf = x.payload; // XXX makes debug easier
                 try {
