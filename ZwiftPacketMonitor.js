@@ -56,8 +56,6 @@ class ZwiftPacketMonitor extends EventEmitter {
                 } else if (![110, 106, 102, 109, 108, 114].includes(x.payloadType)) {
                     console.warn('No payload message for:', x.payloadType, x.payload);
                 }
-                console.debug('Unhandled payload type:', x.payloadType);
-                console.debug(x.payload.join());
             } else {
                 x.payloadBuf = x.payload; // XXX makes debug easier
                 try {
@@ -121,7 +119,7 @@ class ZwiftPacketMonitor extends EventEmitter {
                 // Late 2021 format is single byte of magic or flags followed by regular protobuf.  However, upon
                 // initial connect a 0x06 (legacy?) is seen a few times.  Almost like a negotiation?  Perhaps
                 // something to handle the upgrade slowly.
-                if (buf[0] !== 0xdf & buf[0] != 0x06) {
+                if (buf[0] !== 0xdf && buf[0] != 0x06 && buf[0] != 0x08) { // XXX testing 0x8 seen during event join
                     debugger;
                     throw new TypeError('Unhandled outgoing packet format');
                 }
