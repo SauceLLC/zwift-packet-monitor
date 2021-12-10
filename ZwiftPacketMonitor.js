@@ -116,10 +116,14 @@ class ZwiftPacketMonitor extends EventEmitter {
                 }
                 this._handleIncomingPacket(packet);
             } else if (udp.info.dstport === 3022) {
+                if (buf[0] === 0x08) {
+                    console.warn("XXX Unhandled event joining data.");
+                    return;
+                }
                 // Late 2021 format is single byte of magic or flags followed by regular protobuf.  However, upon
                 // initial connect a 0x06 (legacy?) is seen a few times.  Almost like a negotiation?  Perhaps
                 // something to handle the upgrade slowly.
-                if (buf[0] !== 0xdf && buf[0] != 0x06 && buf[0] != 0x08) { // XXX testing 0x8 seen during event join
+                if (buf[0] !== 0xdf && buf[0] != 0x06) {
                     debugger;
                     throw new TypeError('Unhandled outgoing packet format');
                 }
