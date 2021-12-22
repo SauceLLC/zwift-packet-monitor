@@ -116,21 +116,23 @@ class ZwiftPacketMonitor extends EventEmitter {
                 }
                 this._handleIncomingPacket(packet);
             } else if (udp.info.dstport === 3022) {
-                if (buf[0] === 0x08) {
-                    console.warn("XXX Unhandled event joining data.");
+                let skip;
+                // Bunch of strange stuff, newest -> oldest seen.
+                if (buf[0] === 0xdf) {
+                    skip = 1;
+                } else if (buf[0] === 0x06) {
+                    skip = 5;
+                } else if (buf[0] === 0x08) {
+                    skip = 0;
+                    console.warn("Untested condition, does it parse?");
+                } else {
+                    console.error("Invalid outgoing packet", buf.slice(0, 10));
                     return;
                 }
-                // Late 2021 format is single byte of magic or flags followed by regular protobuf.  However, upon
-                // initial connect a 0x06 (legacy?) is seen a few times.  Almost like a negotiation?  Perhaps
-                // something to handle the upgrade slowly.
-                if (buf[0] !== 0xdf && buf[0] != 0x06) {
-                    debugger;
-                    throw new TypeError('Unhandled outgoing packet format');
-                }
-                // Last four bytes of outgoing data are also non-protobuf, but no idea what..
-                console.debug(buf.slice(0, 4));
+                // Last four bytes of outgoing data are also non-protobuf.
+                let packet;
                 try {
-                    const packet = OutgoingPacket.decode(buf.slice(1, -4));
+                    packet = OutgoingPacket.decode(buf.slice(skip, -4));
                 } catch(e) {
                     console.error("OUTGOING DECODE ERROR:", buf.slice(0, 100));
                     return;
