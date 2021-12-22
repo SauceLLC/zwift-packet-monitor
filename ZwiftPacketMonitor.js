@@ -128,6 +128,7 @@ class ZwiftPacketMonitor extends EventEmitter {
                     throw new TypeError('Unhandled outgoing packet format');
                 }
                 // Last four bytes of outgoing data are also non-protobuf, but no idea what..
+                console.debug(buf.slice(0, 4));
                 try {
                     const packet = OutgoingPacket.decode(buf.slice(1, -4));
                 } catch(e) {
