@@ -124,7 +124,6 @@ class ZwiftPacketMonitor extends EventEmitter {
                     skip = 5;
                 } else if (buf[0] === 0x08) {
                     skip = 0;
-                    console.warn("Untested condition, does it parse?");
                 } else {
                     console.error("Invalid outgoing packet", buf.slice(0, 10));
                     return;
