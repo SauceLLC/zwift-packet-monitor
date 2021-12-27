@@ -22,7 +22,7 @@ message PlayerState {
     int32 progress = 21;
     int64 joinTime = 22;
     bool justWatching = 23;
-    int32 joules = 24;
+    int32 mwHours = 24; // milliwatt/hours of energy
     float x = 25; // cartesian meters
     float y = 27; // cartesian meters
     float altitude = 26;
