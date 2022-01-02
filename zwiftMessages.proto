@@ -3,26 +3,26 @@ syntax="proto3";
 
 message PlayerState {
     int32 athleteId = 1;
-    int64 worldTime = 2;
+    int64 _worldTime = 2;
     int32 distance = 3;
     int32 roadLocation = 4; // Location on road in percent * 10,000.
     int32 laps = 5;
-    int32 speed = 6; // mm / hour
+    int32 _speed = 6; // mm / hour
     int32 roadPosition = 8;  // Horiz, i.e. lane.
-    int32 cadenceUHz = 9;
+    int32 _cadenceUHz = 9;
     int32 draft = 10; // seems to be in percentage.
     int32 heartrate = 11;
     int32 power = 12;
-    int32 heading = 13;  // microrads from -pi -> 3pi
+    int32 _heading = 13;  // microrads from -pi -> 3pi
     int32 lean = 14;
     int32 climbing = 15;
     int32 time = 16;
-    uint32 flags1 = 19; // Packed with info parsed in user code
-    uint32 flags2 = 20; // Packed with info parsed in user code
+    uint32 _flags1 = 19; // Packed with info parsed in user code
+    uint32 _flags2 = 20; // Packed with info parsed in user code
     int32 progress = 21;
     int64 joinTime = 22;
     bool justWatching = 23;
-    int32 mwHours = 24; // milliwatt/hours of energy
+    int32 _mwHours = 24; // milliwatt/hours of energy
     float x = 25; // cartesian meters
     float y = 27; // cartesian meters
     float altitude = 26;
@@ -30,12 +30,12 @@ message PlayerState {
     int32 groupId = 29;
     int32 sport = 31; // 0 = biking, 1 = running
     float actualDistance = 34;
-    int32 f35 = 35; // varint
-    int64 f36 = 36; // varint
-    int64 f37 = 37; // varint
-    int32 f38 = 38;
-    int64 f39 = 39; // varint
-    int64 f41 = 41; // varint
+    int32 _f35 = 35; // varint
+    int64 _f36 = 36; // varint
+    int64 _f37 = 37; // varint
+    int32 _f38 = 38;
+    int64 _f39 = 39; // varint
+    int64 _f41 = 41; // varint
 }
 
 message OutgoingPacket {
