@@ -51,8 +51,20 @@ class ZwiftPacketMonitor extends EventEmitter {
             if (!PayloadMsg) {
                 if (x.payloadType === 100 || x.payloadType === 101) {
                     // These appear to LE floats.  Perhaps some latency reports (values of ~0.2 or ~4.2 observed)
-                    x.XXX_maybe_latency_report = x.payload.readFloatLE();
+                    x._XXX_maybe_latency_report = x.payload.readFloatLE();
                     console.warn("XXX Possible latency report?:", x.XXX_maybe_latency_report);
+                } else if (x.payloadType === 116) {
+                    // Looks like 4 64bit numbers, but not sure what they represent. Interval is 30seconds
+                    if (x.payload.byteLength !== 32) {
+                        console.warn('Unexpected payload size for type 116', x.payload.byteLength);
+                    } else {
+                        x._XXX_116_num1 = x.payload.readBigInt64LE(0);
+                        x._XXX_116_num2 = x.payload.readBigInt64LE(8);
+                        x._XXX_116_num3 = x.payload.readBigInt64LE(16);
+                        x._XXX_116_num4 = x.payload.readBigInt64LE(24);
+                        console.warn("What are these? XXX", x._XXX_116_num1, x._XXX_116_num2,
+                            x._XXX_116_num3, x._XXX_116_num4, x.payload);
+                    }
                 } else if (![110, 106, 102, 109, 108, 114].includes(x.payloadType)) {
                     console.warn('No payload message for:', x.payloadType, x.payload);
                 }
@@ -116,19 +128,26 @@ class ZwiftPacketMonitor extends EventEmitter {
                 }
                 this._handleIncomingPacket(packet);
             } else if (udp.info.dstport === 3022) {
-                if (buf[0] === 0x08) {
-                    console.warn("XXX Unhandled event joining data.");
+                let skip;
+                // Bunch of strange stuff, newest -> oldest seen.
+                if (buf[0] === 0xdf) {
+                    skip = 1;
+                } else if (buf[0] === 0x06) {
+                    skip = 5;
+                } else if (buf[0] === 0x08) {
+                    skip = 0;
+                } else {
+                    console.error("Invalid outgoing packet", buf.slice(0, 10));
                     return;
                 }
-                // Late 2021 format is single byte of magic or flags followed by regular protobuf.  However, upon
-                // initial connect a 0x06 (legacy?) is seen a few times.  Almost like a negotiation?  Perhaps
-                // something to handle the upgrade slowly.
-                if (buf[0] !== 0xdf && buf[0] != 0x06) {
-                    debugger;
-                    throw new TypeError('Unhandled outgoing packet format');
+                // Last four bytes of outgoing data are also non-protobuf.
+                let packet;
+                try {
+                    packet = OutgoingPacket.decode(buf.slice(skip, -4));
+                } catch(e) {
+                    console.error("OUTGOING DECODE ERROR:", buf.slice(0, 100));
+                    return;
                 }
-                // Last four bytes of outgoing data are also non-protobuf, but no idea what..
-                const packet = OutgoingPacket.decode(buf.slice(1, -4));
                 if (packet.worldTime.toNumber()) {
                     packet.date = worldTimeToDate(packet.worldTime);
                 }
