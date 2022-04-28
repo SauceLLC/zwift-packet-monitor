@@ -19,6 +19,12 @@ function worldTimeToDate(wt) {
 }
 
 
+function bufCopySlice(buf, start, end) {
+    // Buffer.slice reuses underlying arraybuffer.  This makes a copy.
+    return Uint8Array.prototype.slice.call(buf, start, end);
+}
+
+
 class ZwiftPacketMonitor extends EventEmitter {
     constructor (interfaceName) {
         super();
@@ -78,17 +84,12 @@ class ZwiftPacketMonitor extends EventEmitter {
                 }
             }
         }
-        setTimeout(() => this.emit('incoming', packet), 0);
+        queueMicrotask(() => this.emit('incoming', packet));
     }
 
-    copyCapBufSlice(start, end) {
-        // Buffer.slice uses existing ArrayBuffer source, we need a real copy when buffering.
-        return Uint8Array.prototype.slice.call(this._capBuf, start, end);
-    }
-
-    processPacket() {
+    processPacket(...args) {
         try {
-            this._processPacket();
+            this._processPacket(...args);
         } catch(e) {
             console.error('Packet processing error:', e);
         }
@@ -108,7 +109,10 @@ class ZwiftPacketMonitor extends EventEmitter {
         return true;
     }
 
-    _processPacket() {
+    _processPacket(len, truncated) {
+        if (truncated) {
+            throw new Error('Buffer overflow: make _capBuf bigger');
+        }
         if (this._linkType !== 'ETHERNET') {
             return;
         }
@@ -119,7 +123,7 @@ class ZwiftPacketMonitor extends EventEmitter {
         const ip = decoders.IPV4(this._capBuf, eth.offset);
         if (ip.info.protocol === PROTOCOL.IP.UDP) {
             const udp = decoders.UDP(this._capBuf, ip.offset);
-            const buf = this._capBuf.slice(udp.offset, udp.offset + udp.info.length);
+            const buf = bufCopySlice(this._capBuf, udp.offset, udp.offset + udp.info.length);
             if (udp.info.srcport === 3022) {
                 const packet = IncomingPacket.decode(buf);
                 if (!this._validateIncomingUDP(packet, `${ip.info.srcaddr}:${udp.info.dstport}`)) {
@@ -151,7 +155,7 @@ class ZwiftPacketMonitor extends EventEmitter {
                 if (packet.worldTime.toNumber()) {
                     packet.date = worldTimeToDate(packet.worldTime);
                 }
-                setTimeout(() => this.emit('outgoing', packet), 0);
+                queueMicrotask(() => this.emit('outgoing', packet));
             }
         } else if (ip.info.protocol === PROTOCOL.IP.TCP) {
             const tcp = decoders.TCP(this._capBuf, ip.offset);
@@ -161,7 +165,6 @@ class ZwiftPacketMonitor extends EventEmitter {
             const datalen = ip.info.totallen - tcp.hdrlen - ip.hdrlen;
             const PSH = !!(tcp.info.flags & 0x08);  // Push means process the buffer
             if (PSH) {
-                // Buffer.slice is zero-copy, so only safe on final buffer.
                 this._tcpBuffers.push(this._capBuf.slice(tcp.offset, tcp.offset + datalen));
                 // The assembled TCP payload contains one or more messages:
                 //    <msg len> <msg> [<msg len> <msg>]...
@@ -179,8 +182,7 @@ class ZwiftPacketMonitor extends EventEmitter {
                     offt += msgLen;
                 }
             } else {
-                // Make a proper copy of the buffer, i.e. !Buffer.slice
-                this._tcpBuffers.push(this.copyCapBufSlice(tcp.offset, tcp.offset + datalen));
+                this._tcpBuffers.push(bufCopySlice(this._capBuf, tcp.offset, tcp.offset + datalen));
             }
         }
     }
