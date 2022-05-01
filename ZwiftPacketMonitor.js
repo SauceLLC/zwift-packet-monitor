@@ -189,6 +189,6 @@ class ZwiftPacketMonitor extends EventEmitter {
 }
 
 ZwiftPacketMonitor.IncomingPacket = IncomingPacket;
-ZwiftPacketMonitor.OutgoinPacket = OutgoingPacket;
+ZwiftPacketMonitor.OutgoingPacket = OutgoingPacket;
 
 module.exports = ZwiftPacketMonitor;
