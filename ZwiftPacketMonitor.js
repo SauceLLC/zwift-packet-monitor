@@ -53,35 +53,17 @@ class ZwiftPacketMonitor extends EventEmitter {
 
     _handleIncomingPacket(packet) {
         for (const x of packet.playerUpdates) {
-            const PayloadMsg = zpb.get(x.$type.getEnum('PayloadType')[x.payloadType]);
-            if (!PayloadMsg) {
-                if (x.payloadType === 100 || x.payloadType === 101) {
-                    // These appear to LE floats.  Perhaps some latency reports (values of ~0.2 or ~4.2 observed)
-                    x._XXX_maybe_latency_report = x.payload.readFloatLE();
-                    console.warn("XXX Possible latency report?:", x.XXX_maybe_latency_report);
-                } else if (x.payloadType === 116) {
-                    // Looks like 4 64bit numbers, but not sure what they represent. Interval is 30seconds
-                    if (x.payload.byteLength !== 32) {
-                        console.warn('Unexpected payload size for type 116', x.payload.byteLength);
-                    } else {
-                        x._XXX_116_num1 = x.payload.readBigInt64LE(0);
-                        x._XXX_116_num2 = x.payload.readBigInt64LE(8);
-                        x._XXX_116_num3 = x.payload.readBigInt64LE(16);
-                        x._XXX_116_num4 = x.payload.readBigInt64LE(24);
-                        console.warn("What are these? XXX", x._XXX_116_num1, x._XXX_116_num2,
-                            x._XXX_116_num3, x._XXX_116_num4, x.payload);
-                    }
-                } else if (![110, 106, 102, 109, 108, 114].includes(x.payloadType)) {
-                    console.warn('No payload message for:', x.payloadType, x.payload);
-                }
+            x.payloadType = x.$type.getEnum('PayloadType')[x._payloadType];
+            if (!x.payloadType) {
+                console.warn("No enum type for:", x._payloadType);
+            } else if (x.payloadType[0] === '_') {
+                console.debug("Ignoring non-protobuf payload:", x.payloadType, x._payload);
             } else {
-                x.payloadBuf = x.payload; // XXX makes debug easier
-                try {
-                    x.payload = PayloadMsg.decode(x.payloadBuf);
-                } catch(e) {
-                    console.error('Payload processing error:', e, PayloadMsg, x.payloadType, x.payloadBuf);
-                    throw e;
+                const PayloadMsg = zpb.get(x.payloadType);
+                if (!PayloadMsg) {
+                    throw new Error("Missing protobuf for type:", x.payloadType);
                 }
+                x.payload = PayloadMsg.decode(x._payload);
             }
         }
         queueMicrotask(() => this.emit('incoming', packet));
@@ -152,8 +134,8 @@ class ZwiftPacketMonitor extends EventEmitter {
                     console.error("OUTGOING DECODE ERROR:", buf.slice(0, 100));
                     return;
                 }
-                if (packet.worldTime.toNumber()) {
-                    packet.date = worldTimeToDate(packet.worldTime);
+                if (packet._worldTime) {
+                    packet.worldTime = worldTimeToDate(packet._worldTime);
                 }
                 queueMicrotask(() => this.emit('outgoing', packet));
             }
