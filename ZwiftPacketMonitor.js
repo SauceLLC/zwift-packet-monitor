@@ -52,7 +52,7 @@ class ZwiftPacketMonitor extends EventEmitter {
     }
 
     _handleIncomingPacket(packet) {
-        for (const x of packet.playerUpdates) {
+        for (const x of packet.worldUpdates) {
             x.payloadType = x.$type.getEnum('PayloadType')[x._payloadType];
             if (!x.payloadType) {
                 console.warn("No enum type for:", x._payloadType);
@@ -172,5 +172,6 @@ class ZwiftPacketMonitor extends EventEmitter {
 
 ZwiftPacketMonitor.IncomingPacket = IncomingPacket;
 ZwiftPacketMonitor.OutgoingPacket = OutgoingPacket;
+ZwiftPacketMonitor.pbRoot = zpb;
 
 module.exports = ZwiftPacketMonitor;

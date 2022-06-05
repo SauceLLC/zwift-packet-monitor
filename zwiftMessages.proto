@@ -52,7 +52,7 @@ message OutgoingPacket {
     int64 lastPlayerUpdate = 12;
     int64 largestWorldAttributeTimestamp = 13;
     repeated int64 subscribedSegments = 15;
-    repeated int64 unsubscribedSegments = 15;
+    repeated int64 unsubscribedSegments = 16;
 }
 
 message WorldUpdate {
@@ -62,7 +62,7 @@ message WorldUpdate {
     enum PayloadType {
         _UNSET = 0;
         PayloadLeftWorld = 2;
-        PayloadLeftWorld = 3;
+        PayloadLeftWorld2 = 3;
         PayloadRideOn = 4;
         PayloadChatMessage = 5;
         PayloadEvent = 6;
@@ -114,7 +114,7 @@ message PayloadSegmentResult {
     int32 athleteId = 2;
     int32 serverRealm = 3;
     int32 courseId = 4;
-    uint64 segmentId = 5;
+    uint64 _segmentId = 5; // high bits are flags for ???
     uint64 eventSubgroupId = 6;
     string firstName = 7;
     string lastName = 8;
@@ -169,6 +169,13 @@ message Payload2 {
 }
 
 message PayloadLeftWorld {
+    int64 athleteId = 1;
+    int64 _worldTime = 2;
+    bool multipleLogins = 3;
+    bool _f4 = 4; // maybe bool
+}
+
+message PayloadLeftWorld2 {
     int64 athleteId = 1;
     int64 _worldTime = 2;
     bool multipleLogins = 3;
