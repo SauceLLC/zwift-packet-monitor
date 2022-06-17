@@ -115,13 +115,13 @@ message PayloadSegmentResult {
     int32 serverRealm = 3;
     int32 courseId = 4;
     uint64 _unsignedSegmentId = 5;
-    uint64 eventSubgroupId = 6;
+    uint32 eventSubgroupId = 6;
     string firstName = 7;
     string lastName = 8;
     uint64 _worldTime = 9;
     string finishTime = 10;
-    uint64 elapsed = 11; // ms
-    int32 _f12 = 12;
+    uint32 elapsed = 11; // ms
+    int32 powerType = 12;
     int32 weight = 13; // grams
     int32 _f14 = 14;
     uint32 avgPower = 15;
@@ -130,7 +130,7 @@ message PayloadSegmentResult {
     uint32 playerType = 18;
     int32 avgHR = 19;
     int32 sport = 20;
-    int64 _f21 = 21;
+    int64 activityId = 21;
 }
 
 
