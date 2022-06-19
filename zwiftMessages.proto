@@ -4,7 +4,7 @@ syntax="proto3";
 message PlayerState {
     int32 athleteId = 1;
     int64 _worldTime = 2;
-    int32 _distance = 3;
+    int32 distance = 3; // meters
     int32 roadLocation = 4; // Location on road in percent * 10,000.
     int32 laps = 5;
     int32 _speed = 6; // mm / hour
@@ -20,7 +20,7 @@ message PlayerState {
     uint32 frameHue = 18;
     uint32 _flags1 = 19; // Packed with info parsed in user code
     uint32 _flags2 = 20; // Packed with info parsed in user code
-    int32 progress = 21; // only see bits 8-16 set
+    uint32 _progress = 21; // 16-32 are some sort of inverse mask when set, 8-16 is pct progress, 0 is workout
     int64 _joinTime = 22;
     bool justWatching = 23;
     int32 _mwHours = 24; // milliwatt/hours of energy
@@ -30,12 +30,12 @@ message PlayerState {
     int32 watchingAthleteId = 28;
     int32 groupId = 29;
     int32 sport = 31; // 0 = biking, 1 = running
-    float _distanceWithLateral = 34;  // cm
+    float _distanceWithLateral = 34; // cm
     int32 world = 35;
     int64 _f36 = 36; // varint
     int64 _f37 = 37; // varint
     bool canSteer = 38;
-    int32 route = 39;
+    uint32 route = 39;
     int64 _f41 = 41; // varint
 }
 
