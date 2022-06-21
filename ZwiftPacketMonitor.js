@@ -56,9 +56,7 @@ class ZwiftPacketMonitor extends EventEmitter {
             x.payloadType = x.$type.getEnum('PayloadType')[x._payloadType];
             if (!x.payloadType) {
                 console.warn("No enum type for:", x._payloadType);
-            } else if (x.payloadType[0] === '_') {
-                console.debug("Ignoring non-protobuf payload:", x.payloadType, x._payload);
-            } else {
+            } else if (x.payloadType[0] !== '_') {
                 const PayloadMsg = zpb.get(x.payloadType);
                 if (!PayloadMsg) {
                     throw new Error("Missing protobuf for type:", x.payloadType);
