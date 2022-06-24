@@ -32,8 +32,8 @@ message PlayerState {
     int32 sport = 31; // 0 = biking, 1 = running
     float _distanceWithLateral = 34; // cm
     int32 world = 35;
-    int64 _f36 = 36; // varint
-    int64 _f37 = 37; // varint
+    int32 _f36 = 36; // low vals like 56 maybe segment/route/course/road related
+    int32 _f37 = 37; // low vals like 4 maybe segment/route/course/road related
     bool canSteer = 38;
     uint32 route = 39;
     int64 _f41 = 41; // varint
