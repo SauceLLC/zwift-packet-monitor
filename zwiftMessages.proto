@@ -57,7 +57,7 @@ message OutgoingPacket {
 
 message WorldUpdate {
     int64 _worldTime = 1;
-    int32 serverRealm = 2;
+    int32 realm = 2;
 
     enum PayloadType {
         _UNSET = 0;
@@ -112,7 +112,7 @@ message PayloadEventLeave {
 message PayloadSegmentResult {
     int64 id = 1;
     int32 athleteId = 2;
-    int32 serverRealm = 3;
+    int32 realm = 3;
     int32 courseId = 4;
     uint64 _unsignedSegmentId = 5;
     uint32 eventSubgroupId = 6;
@@ -136,7 +136,7 @@ message PayloadSegmentResult {
 
 // for /api/segment-results
 message SegmentResults {
-    uint32 serverRealm = 1;
+    uint32 realm = 1;
     uint64 _unsignedSegmentId = 2;
     uint64 eventSubgroupId = 3;
     repeated PayloadSegmentResult results = 4;
@@ -258,7 +258,7 @@ message EventPositions {
 }
 
 message IncomingPacket {
-    int32 serverRealm = 1;
+    int32 realm = 1;
     int32 athleteId = 2;
     int64 _worldTime = 3;
     int32 seqno = 4;
@@ -323,18 +323,6 @@ message WorldAttributes {
 
 message WorldAttribute {
     int64 worldTime = 2;
-}
-
-message EventSubgroupProtobuf {
-    int32 id = 1;
-    string name = 2;
-    int32 rules = 8;
-    int32 route = 22;
-    int32 laps = 25;
-    int32 startLocation = 29;
-    int32 label = 30;
-    int32 paceType = 31;
-    int32 jerseyHash = 36;
 }
 
 message AthleteAttributes {
